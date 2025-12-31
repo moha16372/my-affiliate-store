@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجري الاحترافي - Affiliate Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg: #0f172a; --card: #ffffff; --text: #1e293b; --primary: #e11d48; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; }
+        .profile-img { font-size: 70px; background: rgba(255,255,255,0.1); width: 120px; height: 120px; line-height: 120px; border-radius: 50%; margin: 0 auto 20px; border: 2px solid var(--primary); }
+        h1 { font-size: 28px; margin: 10px 0; }
+        .bio { color: #94a3b8; margin-bottom: 30px; font-size: 16px; }
+        .section-header { text-align: right; margin: 30px 0 15px; font-size: 18px; color: #fbbf24; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .product-card { background: var(--card); color: var(--text); border-radius: 20px; padding: 20px; margin-bottom: 20px; transition: 0.3s; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-card h3 { margin: 0 0 15px; font-size: 20px; }
+        .buy-btn { background: var(--primary); color: white; text-decoration: none; padding: 12px 25px; border-radius: 10px; display: block; font-weight: bold; font-size: 16px; }
+        .social-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(255,255,255,0.05); color: white; text-decoration: none; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .social-btn:hover { background: #6366f1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-img" id="logo-icon">🛒</div>
+        <h1 id="shop-name">جاري التحميل...</h1>
+        <p class="bio" id="shop-bio"></p>
+
+        <div class="section-header"><i class="fas fa-star"></i> منتجات مختارة لكم</div>
+        <div id="products-list"></div>
+
+        <div class="section-header"><i class="fas fa-share-alt"></i> روابط التواصل</div>
+        <div id="social-list"></div>
+    </div>
+
+    <script>
+        fetch('/api/data')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('shop-name').innerText = data.projectName || "متجري";
+                document.getElementById('shop-bio').innerText = data.bio || "مرحباً بكم في متجري";
+                document.getElementById('logo-icon').innerText = data.logo || "🛍️";
+
+                const pList = document.getElementById('products-list');
+                pList.innerHTML = "";
+                (data.products || []).forEach(p => {
+                    pList.innerHTML += `
+                        <div class="product-card">
+                            <h3>${p.name}</h3>
+                            <a href="${p.url}" target="_blank" class="buy-btn">شراء من أمازون <i class="fas fa-external-link-alt"></i></a>
+                        </div>`;
+                });
+
+                const sList = document.getElementById('social-list');
+                sList.innerHTML = "";
+                (data.socialLinks || []).forEach(s => {
+                    sList.innerHTML += `<a href="${s.url}" target="_blank" class="social-btn">${s.platform}</a>`;
+                });
+            });
+    </script>
+</body>
+</html>

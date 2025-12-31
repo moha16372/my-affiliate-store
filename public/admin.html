@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة منصة الأفلييت</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; display: flex; }
+        .sidebar { width: 260px; background: #1a202c; color: white; height: 100vh; position: fixed; }
+        .sidebar h2 { padding: 20px; text-align: center; border-bottom: 1px solid #2d3748; }
+        .sidebar button { width: 100%; padding: 15px; background: none; border: none; color: white; text-align: right; cursor: pointer; font-size: 16px; }
+        .sidebar button:hover { background: #2d3748; }
+        .content { margin-right: 260px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .product-item { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+        .btn-save { background: #4c51bf; color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>لوحة التحكم 🛠️</h2>
+    <button onclick="showTab('info')"><i class="fas fa-id-card"></i> إعدادات الهوية</button>
+    <button onclick="showTab('social')"><i class="fas fa-share-alt"></i> السوشيال ميديا</button>
+    <button onclick="showTab('products')"><i class="fas fa-shopping-bag"></i> إضافة المنتجات</button>
+    <button onclick="saveAll()" style="background: #2f855a; margin-top: 20px;"><i class="fas fa-check-circle"></i> نشر التغييرات</button>
+</div>
+
+<div class="content">
+    <div id="info" class="tab-content card">
+        <h3>1. إعدادات الموقع (القالب واللوجو)</h3>
+        <div class="form-group">
+            <label>اسم المنصة</label>
+            <input type="text" id="projName">
+        </div>
+        <div class="form-group">
+            <label>أيقونة اللوجو (Emoji أو رابط صورة)</label>
+            <input type="text" id="logo">
+        </div>
+        <div class="form-group">
+            <label>الوصف (Bio)</label>
+            <textarea id="bio"></textarea>
+        </div>
+    </div>
+
+    <div id="social" class="tab-content card" style="display:none;">
+        <h3>2. روابط السوشيال ميديا</h3>
+        <div id="social-container"></div>
+        <button onclick="addSocial()">+ إضافة رابط جديد</button>
+    </div>
+
+    <div id="products" class="tab-content card" style="display:none;">
+        <h3>3. المنتجات (Amazon / Affiliate)</h3>
+        <div id="products-container"></div>
+        <button onclick="addProduct()">+ إضافة منتج جديد</button>
+    </div>
+</div>
+
+<script>
+    let db = {};
+
+    function showTab(id) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    async function loadData() {
+        const res = await fetch('/api/data');
+        db = await res.json();
+        document.getElementById('projName').value = db.projectName;
+        document.getElementById('logo').value = db.logo;
+        document.getElementById('bio').value = db.bio;
+        renderSocial();
+        renderProducts();
+    }
+
+    function renderSocial() {
+        const container = document.getElementById('social-container');
+        container.innerHTML = '';
+        db.socialLinks.forEach((s, i) => {
+            container.innerHTML += `<div class="form-group"><input placeholder="المنصة (Facebook)" value="${s.platform}" onchange="db.socialLinks[${i}].platform=this.value"> <input placeholder="الرابط" value="${s.url}" onchange="db.socialLinks[${i}].url=this.value"></div>`;
+        });
+    }
+
+    function renderProducts() {
+        const container = document.getElementById('products-container');
+        container.innerHTML = '';
+        db.products.forEach((p, i) => {
+            container.innerHTML += `
+                <div class="product-item">
+                    <input placeholder="اسم المنتج" value="${p.name}" onchange="db.products[${i}].name=this.value">
+                    <input placeholder="رابط الأفلييت (Amazon)" value="${p.url}" onchange="db.products[${i}].url=this.value">
+                </div>`;
+        });
+    }
+
+    function addSocial() { db.socialLinks.push({platform:"", url:""}); renderSocial(); }
+    function addProduct() { db.products.push({name:"", url:""}); renderProducts(); }
+
+    async function saveAll() {
+        db.projectName = document.getElementById('projName').value;
+        db.logo = document.getElementById('logo').value;
+        db.bio = document.getElementById('bio').value;
+        await fetch('/api/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(db)
+        });
+        alert('✅ تم نشر الموقع بنجاح! يمكن للعملاء الآن رؤية التحديثات.');
+    }
+
+    loadData();
+</script>
+</body>
+</html>
